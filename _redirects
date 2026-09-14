@@ -1,17 +1,2 @@
-/index.html                     /                           301
-/interior-paint                 /interior-paint.html        200
-/exterior-paint                 /exterior-paint.html        200
-/door-paint                     /door-paint.html            200
-/prices                         /prices.html                200
-/city-landing                   /city-landing.html          200
-/our-works                      /our-works.html             200
-/about-us                       /about-us.html              200
-/contact-us                     /contact-us.html            200
-/faq                            /faq.html                   200
-/warranty                       /warranty.html              200
-/thank-you                      /thank-you.html             200
-/privacy-policy                 /privacy-policy.html        200
-/terms-conditions               /terms-conditions.html      200
-
-# توجيه الروابط التائهة لصفحة 404 المخصصة
-/*                              /404.html                   404
+# Cloudflare Pages Redirects
+# نظام التوجيه الأصلي لكلاودفلير (Clean URLs & Custom 404) يعمل تلقائياً وبأعلى سرعة
