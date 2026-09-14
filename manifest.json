@@ -1,0 +1,27 @@
+{
+  "name": "الأول لتنفيذ الدهانات بكل أنواعها في الرياض",
+  "short_name": "الأول للدهانات",
+  "description": "تنفيذ دهانات داخلية وخارجية وبروفايل ورش أبواب بالرياض بأعلى جودة وضمان معتمد.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar-SA",
+  "icons": [
+    {
+      "src": "/images/logo_result.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo_result.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
