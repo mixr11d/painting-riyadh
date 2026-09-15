@@ -1,10 +1,9 @@
 /**
  * Core Architectural Engine & Google Ads Tracking Architecture
  * Client: الأول لتنفيذ الدهانات بالرياض (0534953831)
- * Developer Number: 0578539687
  */
 
-// 1. إعدادات الحسابات والإحالات المعتمدة
+// إعدادات الحسابات والإحالات المعتمدة
 const CONFIG = {
   adsId: 'AW-17812962041',
   labels: {
@@ -15,79 +14,39 @@ const CONFIG = {
   clientPhoneClean: '966534953831'
 };
 
-// 2. تهيئة مصفوفة dataLayer فوراً في الذاكرة
+// تهيئة مصفوفة dataLayer فوراً
 window.dataLayer = window.dataLayer || [];
 function gtag(){ window.dataLayer.push(arguments); }
 gtag('js', new Date());
 gtag('config', CONFIG.adsId);
 
-// 3. حقن سكربت قوقل الرسمي في ترويسة الصفحة فوراً دون أي تأخير ليتعرف عليه Tag Assistant
-(function() {
-  const script = document.createElement('script');
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.adsId}`;
-  document.head.appendChild(script);
-})();
-
-// 4. إزالة أي حظر سابق تلقائياً لضمان نجاح الفحص
-try {
-  localStorage.removeItem('block_ads_tracking');
-} catch (e) {}
-
-// فحص الجلسة (يسمح دائماً بالتتبع أثناء وجود أداة Tag Assistant)
-function isDeveloperSession() {
-  const urlParams = new URLSearchParams(window.location.search);
-  // إذا كانت أداة فحص قوقل تعمل، لا تقم بالحظر أبداً
-  if (urlParams.has('gtm_debug') || urlParams.has('tag_assistant') || window.location.href.includes('google')) {
-    return false;
-  }
-  // الحظر يعمل فقط إذا أضفت الرابط يدوياً بـ ?dev_preview=true
-  return urlParams.get('dev_preview') === 'true';
-}
-
-// 5. دالة تسجيل الإحالة المحصنة والخالية من الأخطاء
+// دالة تسجيل الإحالة المباشرة بدون أي حظر لتجاوز الفحص فوراً
 function reportConversion(conversionType, targetUrl) {
-  if (isDeveloperSession()) {
-    console.info('[Tracking Blocked]: وضع المعاينة التجريبي مفعّل.');
-    if (targetUrl) window.location.href = targetUrl;
-    return;
-  }
-
   let label = CONFIG.labels.whatsapp;
   if (conversionType === 'call') label = CONFIG.labels.call;
   if (conversionType === 'form') label = CONFIG.labels.form;
 
   const sendToTag = `${CONFIG.adsId}/${label}`;
-  console.log('--> جاري إرسال الإحالة إلى قوقل:', sendToTag);
-
-  let callbackExecuted = false;
-  const executeCallback = () => {
-    if (!callbackExecuted) {
-      callbackExecuted = true;
+  
+  // إرسال الإحالة لقوقل فوراً
+  gtag('event', 'conversion', {
+    send_to: sendToTag,
+    event_callback: function() {
       if (targetUrl) {
         window.location.href = targetUrl;
       }
     }
-  };
+  });
 
-  // صمام أمان زمني 600ms
-  const safetyTimeout = setTimeout(executeCallback, 600);
-
-  try {
-    gtag('event', 'conversion', {
-      send_to: sendToTag,
-      event_callback: () => {
-        clearTimeout(safetyTimeout);
-        executeCallback();
-      }
-    });
-  } catch (err) {
-    clearTimeout(safetyTimeout);
-    executeCallback();
-  }
+  // صمام أمان بعد 500 ملي ثانية
+  setTimeout(function() {
+    if (targetUrl) {
+      window.location.href = targetUrl;
+    }
+  }, 500);
 }
 
-// 6. تشغيل القوائم والتفاعل والأزرار بعد جاهزية الصفحة
+// تشغيل القوائم والتفاعل بعد تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
   // قائمة الجوال
   const menuToggle = document.getElementById('menuToggle');
@@ -113,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawerBackdrop.addEventListener('click', closeMenu);
   }
 
-  // أكورديون الخدمات بدرج الجوال
+  // أكورديون الخدمات
   const accordionToggle = document.getElementById('mobileServicesToggle');
   const accordionContent = document.getElementById('mobileServicesList');
   if (accordionToggle && accordionContent) {
@@ -123,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // زر الصعود للأعلى
+  // زر الصعود لأعلى
   const scrollBtn = document.getElementById('scrollTopBtn');
   window.addEventListener('scroll', () => {
     if (window.pageYOffset > 380) {
@@ -152,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // حاسبة ونموذج التسعير السريع المربوط بالواتساب
+  // نموذج وحاسبة التسعير السريع المربوط بالواتساب
   const quoteForm = document.getElementById('quickQuoteForm');
   if (quoteForm) {
     quoteForm.addEventListener('submit', (e) => {
@@ -171,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 7. الدوال العامة المربوطة بأزرار الاتصال والواتساب
+// الدوال العامة لأزرار الاتصال والواتساب
 window.handleTrackedWhatsApp = function(event, defaultText) {
   if (event) event.preventDefault();
   const text = defaultText || 'مرحباً، أود الاستفسار عن خدمات الدهانات بالرياض وطلب معاينة مجانية';
@@ -185,7 +144,7 @@ window.handleTrackedCall = function(event) {
   reportConversion('call', url);
 };
 
-// 8. مشغل الخدمة PWA
+// تسجيل Service Worker للـ PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => {
