@@ -53,14 +53,14 @@ function triggerGoogleConversion(label, callbackUrl) {
       'event_callback': fireCallback
     });
 
-    // مهلة احتياطية للأمان (Fallback) في حال تأخر رد السيرفر
+    // مهلة احتياطية للأمان (Fallback)
     setTimeout(fireCallback, 600);
   } else if (callbackUrl) {
     window.location.href = callbackUrl;
   }
 }
 
-// دوال عامة متوافقة مع أزرار HTML القديمة
+// دوال عامة متوافقة مع أزرار HTML
 window.handleTrackedCall = function(event) {
   triggerGoogleConversion(CONVERSION_LABEL_CALL);
 };
@@ -69,10 +69,22 @@ window.handleTrackedWhatsApp = function(event) {
   triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
 };
 
+window.reportConversion = function(conversionType, targetUrl) {
+  let label = CONVERSION_LABEL_WHATSAPP;
+  if (conversionType === 'call') label = CONVERSION_LABEL_CALL;
+  if (conversionType === 'form') label = CONVERSION_LABEL_FORM;
+  triggerGoogleConversion(label, targetUrl);
+};
+
 // =========================================================================
 // 3. إدارة التفاعل، تتبع النقرات العام، والقوائم ونموذج التسعير
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+
+  // فحص صفحة الشكر في حال الوصول إليها
+  if (window.location.pathname.includes('thank-you')) {
+    triggerGoogleConversion(CONVERSION_LABEL_FORM);
+  }
 
   // تتبع النقر العام (اتصال / واتساب) مع استبعاد رقم المطور تلقائياً
   document.addEventListener('click', (e) => {
@@ -81,17 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const href = target.getAttribute('href') || '';
 
-    // استبعاد رقم المطور من حرق الميزانية
+    // استبعاد رقم المطور
     if (href.includes('0578539687') || href.includes('966578539687')) {
       return;
     }
 
-    // تتبع الاتصال الهاتفي (أي رابط يبدأ بـ tel:)
+    // تتبع الاتصال الهاتفي
     if (href.startsWith(`tel:${CLIENT_PHONE}`) || href.startsWith(`tel:+966${CLIENT_PHONE.substring(1)}`) || href.startsWith('tel:')) {
       triggerGoogleConversion(CONVERSION_LABEL_CALL);
     }
 
-    // تتبع الواتساب (أي رابط يحتوي على wa.me أو رقم العميل)
+    // تتبع الواتساب
     if (href.includes(CLIENT_INT_PHONE) || href.includes(CLIENT_PHONE) || href.includes('wa.me')) {
       triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
     }
@@ -107,16 +119,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const area = (document.getElementById('formArea') || {}).value || 'غير محدد';
       const district = (document.getElementById('formDistrict') || {}).value || 'الرياض';
 
-      // 1. إرسال إحالة النموذج فوراً إلى جوجل
+      // 1. إرسال إحالة النموذج فوراً إلى قوقل
+      console.log('--> إرسال إحالة النموذج إلى قوقل:', CONVERSION_LABEL_FORM);
       triggerGoogleConversion(CONVERSION_LABEL_FORM);
 
       const msg = `مرحباً، أود طلب تسعيرة فورية للمتر من مؤسسة الأول للدهانات:\n- نوع الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
       const targetUrl = `https://wa.me/${CLIENT_INT_PHONE}?text=${encodeURIComponent(msg)}`;
 
-      // 2. الانتقال إلى الواتساب بعد إطلاق الإحالة مباشرة
+      // 2. فتح الواتساب في نافذة جديدة لتبقى صفحة الموقع مفتوحة أمام Tag Assistant لتأكيد الإحالة
       setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 300);
+        const win = window.open(targetUrl, '_blank');
+        if (!win) {
+          window.location.href = targetUrl;
+        }
+      }, 350);
     });
   }
 
