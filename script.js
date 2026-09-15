@@ -10,11 +10,11 @@ function gtag(){ window.dataLayer.push(arguments); }
 
 // إعدادات التتبع
 const CONFIG = {
-  adsId: 'AW-XXXXXXXXXXX',
+  adsId: 'AW-17812962041',
   labels: {
-    call: 'XXXXXXXXXXXXXXXXXX',
-    whatsapp: 'XXXXXXXXXXXXXXXXXX',
-    form: 'XXXXXXXXXXXXXXXXXX'
+    call: '14RnCMm-nfgcEPn18K1C',
+    whatsapp: '3iEbCMy-nfgcEPn18K1C',
+    form: 'T-M8CLi2pPgcEPn18K1C'
   },
   clientPhoneClean: '966534953831',
   devPhones: ['0578539687', '966578539687']
