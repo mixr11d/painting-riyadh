@@ -47,7 +47,8 @@ function triggerGoogleConversion(label, callbackUrl) {
       }
     }
 
-    // إرسال حدث الإحالة القياسي
+    // إرسال حدث الإحالة القياسي إلى قوقل
+    console.log('===> إرسال إحالة إلى قوقل برمز:', label);
     window.gtag('event', 'conversion', {
       'send_to': `${GOOGLE_ADS_ID}/${label}`,
       'event_callback': fireCallback
@@ -60,13 +61,17 @@ function triggerGoogleConversion(label, callbackUrl) {
   }
 }
 
-// دوال عامة متوافقة مع أزرار HTML
+// دوال عامة مربوطة بأزرار الموقع مباشرة
 window.handleTrackedCall = function(event) {
   triggerGoogleConversion(CONVERSION_LABEL_CALL);
 };
 
 window.handleTrackedWhatsApp = function(event) {
   triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
+};
+
+window.handleTrackedForm = function(event) {
+  triggerGoogleConversion(CONVERSION_LABEL_FORM);
 };
 
 window.reportConversion = function(conversionType, targetUrl) {
@@ -81,13 +86,19 @@ window.reportConversion = function(conversionType, targetUrl) {
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
 
-  // فحص صفحة الشكر في حال الوصول إليها
+  // إذا وصل الزائر لصفحة الشكر يتم إرسال إحالة النموذج تلقائياً
   if (window.location.pathname.includes('thank-you')) {
     triggerGoogleConversion(CONVERSION_LABEL_FORM);
   }
 
   // تتبع النقر العام (اتصال / واتساب) مع استبعاد رقم المطور تلقائياً
   document.addEventListener('click', (e) => {
+    // تتبع زر إرسال النموذج إذا تم الضغط عليه
+    const submitBtn = e.target.closest('button[type="submit"]');
+    if (submitBtn) {
+      triggerGoogleConversion(CONVERSION_LABEL_FORM);
+    }
+
     const target = e.target.closest('a');
     if (!target) return;
 
@@ -119,20 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const area = (document.getElementById('formArea') || {}).value || 'غير محدد';
       const district = (document.getElementById('formDistrict') || {}).value || 'الرياض';
 
-      // 1. إرسال إحالة النموذج فوراً إلى قوقل
-      console.log('--> إرسال إحالة النموذج إلى قوقل:', CONVERSION_LABEL_FORM);
+      // إرسال إحالة النموذج فوراً
       triggerGoogleConversion(CONVERSION_LABEL_FORM);
 
       const msg = `مرحباً، أود طلب تسعيرة فورية للمتر من مؤسسة الأول للدهانات:\n- نوع الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
       const targetUrl = `https://wa.me/${CLIENT_INT_PHONE}?text=${encodeURIComponent(msg)}`;
 
-      // 2. فتح الواتساب في نافذة جديدة لتبقى صفحة الموقع مفتوحة أمام Tag Assistant لتأكيد الإحالة
+      // فتح الواتساب دون إغلاق صفحة الاختبار
       setTimeout(() => {
-        const win = window.open(targetUrl, '_blank');
-        if (!win) {
-          window.location.href = targetUrl;
-        }
-      }, 350);
+        window.open(targetUrl, '_blank') || (window.location.href = targetUrl);
+      }, 400);
     });
   }
 
