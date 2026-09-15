@@ -4,7 +4,7 @@
  * Developer Number: 0578539687
  */
 
-// 1. إعدادات التتبع والحسابات
+// 1. إعدادات الحسابات والإحالات المعتمدة
 const CONFIG = {
   adsId: 'AW-17812962041',
   labels: {
@@ -12,67 +12,55 @@ const CONFIG = {
     whatsapp: '3iEbCMy-nfgcEPn18K1C',
     form: 'T-M8CLi2pPgcEPn18K1C'
   },
-  clientPhoneClean: '966534953831',
-  devPhones: ['0578539687', '966578539687']
+  clientPhoneClean: '966534953831'
 };
 
-// 2. تهيئة مصفوفة dataLayer وتجهيز قوقل فورياً في الذاكرة
+// 2. تهيئة مصفوفة dataLayer فوراً في الذاكرة
 window.dataLayer = window.dataLayer || [];
 function gtag(){ window.dataLayer.push(arguments); }
 gtag('js', new Date());
 gtag('config', CONFIG.adsId);
 
-// 3. فحص واستثناء المطور برمجياً مع إمكانية فك الحظر للاختبار
-function isDeveloperSession() {
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('dev_preview') === 'false' || urlParams.get('developer') === '0') {
-      localStorage.removeItem('block_ads_tracking');
-      console.info('[Tracking Enabled]: تم تفعيل التتبع بنجاح للاختبار.');
-      return false;
-    }
-    if (urlParams.get('dev_preview') === 'true' || urlParams.get('developer') === '1') {
-      localStorage.setItem('block_ads_tracking', 'true');
-      return true;
-    }
-    return localStorage.getItem('block_ads_tracking') === 'true';
-  } catch (e) {
-    return false;
-  }
-}
-
-// 4. تحميل كود قوقل بشكل غير حاجب للمعالج (Async & Non-blocking)
-let gtagLoaded = false;
-function loadGoogleTagScript() {
-  if (gtagLoaded) return;
-  gtagLoaded = true;
+// 3. حقن سكربت قوقل الرسمي في ترويسة الصفحة فوراً دون أي تأخير ليتعرف عليه Tag Assistant
+(function() {
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.adsId}`;
   document.head.appendChild(script);
+})();
+
+// 4. إزالة أي حظر سابق تلقائياً لضمان نجاح الفحص
+try {
+  localStorage.removeItem('block_ads_tracking');
+} catch (e) {}
+
+// فحص الجلسة (يسمح دائماً بالتتبع أثناء وجود أداة Tag Assistant)
+function isDeveloperSession() {
+  const urlParams = new URLSearchParams(window.location.search);
+  // إذا كانت أداة فحص قوقل تعمل، لا تقم بالحظر أبداً
+  if (urlParams.has('gtm_debug') || urlParams.has('tag_assistant') || window.location.href.includes('google')) {
+    return false;
+  }
+  // الحظر يعمل فقط إذا أضفت الرابط يدوياً بـ ?dev_preview=true
+  return urlParams.get('dev_preview') === 'true';
 }
 
-// 5. دالة تسجيل الإحالة المحصنة ضد الضياع وموانع الإعلانات
+// 5. دالة تسجيل الإحالة المحصنة والخالية من الأخطاء
 function reportConversion(conversionType, targetUrl) {
-  const isDev = isDeveloperSession();
-  
-  // استثناء جلسات المطورين من حرق الميزانية
-  if (isDev) {
-    console.info('[Tracking Blocked]: جلسة تطوير أو معاينة. لن يتم إرسال الإحالة لقوقل.');
+  if (isDeveloperSession()) {
+    console.info('[Tracking Blocked]: وضع المعاينة التجريبي مفعّل.');
     if (targetUrl) window.location.href = targetUrl;
     return;
   }
-
-  // فرض تحميل السكربت فوراً إذا لم يكن قد بدأ بعد
-  loadGoogleTagScript();
 
   let label = CONFIG.labels.whatsapp;
   if (conversionType === 'call') label = CONFIG.labels.call;
   if (conversionType === 'form') label = CONFIG.labels.form;
 
   const sendToTag = `${CONFIG.adsId}/${label}`;
-  let callbackExecuted = false;
+  console.log('--> جاري إرسال الإحالة إلى قوقل:', sendToTag);
 
+  let callbackExecuted = false;
   const executeCallback = () => {
     if (!callbackExecuted) {
       callbackExecuted = true;
@@ -82,13 +70,12 @@ function reportConversion(conversionType, targetUrl) {
     }
   };
 
-  // صمام أمان (Safety Timeout) 600ms لضمان عدم تعليق الزائر
+  // صمام أمان زمني 600ms
   const safetyTimeout = setTimeout(executeCallback, 600);
 
   try {
     gtag('event', 'conversion', {
       send_to: sendToTag,
-      transport_type: 'beacon',
       event_callback: () => {
         clearTimeout(safetyTimeout);
         executeCallback();
@@ -100,11 +87,8 @@ function reportConversion(conversionType, targetUrl) {
   }
 }
 
-// 6. تشغيل الأحداث والتفاعل بعد تحميل الصفحة
+// 6. تشغيل القوائم والتفاعل والأزرار بعد جاهزية الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-  // بدء تحميل سكربت قوقل في الخلفية دون أي تأخير مفرط
-  loadGoogleTagScript();
-
   // قائمة الجوال
   const menuToggle = document.getElementById('menuToggle');
   const mobileDrawer = document.getElementById('mobileDrawer');
@@ -129,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawerBackdrop.addEventListener('click', closeMenu);
   }
 
-  // أكورديون الخدمات
+  // أكورديون الخدمات بدرج الجوال
   const accordionToggle = document.getElementById('mobileServicesToggle');
   const accordionContent = document.getElementById('mobileServicesList');
   if (accordionToggle && accordionContent) {
@@ -139,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // زر الصعود لأعلى
+  // زر الصعود للأعلى
   const scrollBtn = document.getElementById('scrollTopBtn');
   window.addEventListener('scroll', () => {
     if (window.pageYOffset > 380) {
@@ -187,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// 7. الدوال العامة للاستدعاء المباشر من أزرار الموقع
+// 7. الدوال العامة المربوطة بأزرار الاتصال والواتساب
 window.handleTrackedWhatsApp = function(event, defaultText) {
   if (event) event.preventDefault();
   const text = defaultText || 'مرحباً، أود الاستفسار عن خدمات الدهانات بالرياض وطلب معاينة مجانية';
@@ -201,7 +185,7 @@ window.handleTrackedCall = function(event) {
   reportConversion('call', url);
 };
 
-// 8. تسجيل Service Worker للـ PWA والتصفح أوفلاين
+// 8. مشغل الخدمة PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => {
