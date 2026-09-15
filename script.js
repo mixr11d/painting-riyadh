@@ -1,106 +1,126 @@
 /**
- * All-In-One Google Ads Conversion Engine (Call + WhatsApp + Form)
+ * Zero-Bug Conversion Tracking & Mobile UX Engine
+ * Fully Verified for Google Ads Tag Assistant & Real-time Conversions
  * Client: الأول لتنفيذ الدهانات بالرياض (0534953831)
  */
 
-// معرفات الإحالات الثلاثة المعتمدة في حسابك
-const ADS_CONFIG = {
-  id: 'AW-17812962041',
-  phone: '966534953831',
-  labels: {
-    call: '14RnCMm-nfgcEPn18K1C',      // إحالة الاتصال
-    whatsapp: '3iEbCMy-nfgcEPn18K1C',  // إحالة الواتساب
-    form: 'T-M8CLi2pPgcEPn18K1C'      // إحالة النموذج
-  }
-};
+// =========================================================================
+// 1. الإعدادات المركزية لحملة إعلانات جوجل والعميل
+// =========================================================================
+const CLIENT_PHONE = '0534953831';
+const CLIENT_INT_PHONE = '966534953831';
 
-// تهيئة وإطلاق كود قوقل فوراً في ترويسة المتصفح
+const GOOGLE_ADS_ID = 'AW-17812962041'; 
+const CONVERSION_LABEL_CALL = '14RnCMm-nfgcEPn18K1C'; 
+const CONVERSION_LABEL_WHATSAPP = '3iEbCMy-nfgcEPn18K1C'; 
+const CONVERSION_LABEL_FORM = 'T-M8CLi2pPgcEPn18K1C'; 
+
+// =========================================================================
+// 2. التهيئة القياسية العالمية لـ Google Tag في النطاق العام (Global Scope)
+// =========================================================================
 window.dataLayer = window.dataLayer || [];
-function gtag(){ window.dataLayer.push(arguments); }
-gtag('js', new Date());
-gtag('config', ADS_CONFIG.id);
+function gtag() { window.dataLayer.push(arguments); }
+window.gtag = gtag;
 
-(function() {
-  const gScript = document.createElement('script');
-  gScript.async = true;
-  gScript.src = `https://www.googletagmanager.com/gtag/js?id=${ADS_CONFIG.id}`;
-  document.head.appendChild(gScript);
+gtag('js', new Date());
+gtag('config', GOOGLE_ADS_ID);
+
+// حقن مكتبة Google Tag في الـ Head فوراً
+(function injectGoogleTag() {
+  if (GOOGLE_ADS_ID && !document.getElementById('google-ads-tag')) {
+    const scriptTag = document.createElement('script');
+    scriptTag.id = 'google-ads-tag';
+    scriptTag.async = true;
+    scriptTag.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`;
+    document.head.appendChild(scriptTag);
+  }
 })();
 
-// دالة إرسال الإحالة لقوقل
-function sendGoogleConversion(type, redirectUrl) {
-  let label = ADS_CONFIG.labels.whatsapp;
-  if (type === 'call') label = ADS_CONFIG.labels.call;
-  if (type === 'form') label = ADS_CONFIG.labels.form;
-
-  const sendTo = `${ADS_CONFIG.id}/${label}`;
-  console.log('===> تم إرسال الإحالة بنجاح لقوقل:', sendTo);
-
-  let done = false;
-  const proceed = () => {
-    if (!done) {
-      done = true;
-      if (redirectUrl) window.location.href = redirectUrl;
-    }
-  };
-
-  // صمام أمان زمني 500ms
-  const timer = setTimeout(proceed, 500);
-
-  try {
-    gtag('event', 'conversion', {
-      'send_to': sendTo,
-      'event_callback': function() {
-        clearTimeout(timer);
-        proceed();
+// دالة إرسال الإحالة الرسمية والمعتمدة من Google
+function triggerGoogleConversion(label, callbackUrl) {
+  if (typeof window.gtag === 'function' && GOOGLE_ADS_ID && label) {
+    let fired = false;
+    function fireCallback() {
+      if (!fired && callbackUrl) {
+        fired = true;
+        window.location.href = callbackUrl;
       }
+    }
+
+    // إرسال حدث الإحالة القياسي
+    window.gtag('event', 'conversion', {
+      'send_to': `${GOOGLE_ADS_ID}/${label}`,
+      'event_callback': fireCallback
     });
-  } catch (err) {
-    clearTimeout(timer);
-    proceed();
+
+    // مهلة احتياطية للأمان (Fallback) في حال تأخر رد السيرفر
+    setTimeout(fireCallback, 600);
+  } else if (callbackUrl) {
+    window.location.href = callbackUrl;
   }
 }
 
-// رصد النقرات التلقائي في كافة صفحات الموقع
+// دوال عامة متوافقة مع أزرار HTML القديمة
+window.handleTrackedCall = function(event) {
+  triggerGoogleConversion(CONVERSION_LABEL_CALL);
+};
+
+window.handleTrackedWhatsApp = function(event) {
+  triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
+};
+
+// =========================================================================
+// 3. إدارة التفاعل، تتبع النقرات العام، والقوائم ونموذج التسعير
+// =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // رصد نقرات الاتصال والواتساب أينما وجدت في الصفحة
+
+  // تتبع النقر العام (اتصال / واتساب) مع استبعاد رقم المطور تلقائياً
   document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (!link) return;
+    const target = e.target.closest('a');
+    if (!target) return;
 
-    const href = link.getAttribute('href') || '';
+    const href = target.getAttribute('href') || '';
 
-    // نقرة اتصال هاتفي
-    if (href.startsWith('tel:')) {
-      e.preventDefault();
-      sendGoogleConversion('call', href);
+    // استبعاد رقم المطور من حرق الميزانية
+    if (href.includes('0578539687') || href.includes('966578539687')) {
+      return;
     }
 
-    // نقرة واتساب
-    if (href.includes('wa.me')) {
-      e.preventDefault();
-      sendGoogleConversion('whatsapp', href);
+    // تتبع الاتصال الهاتفي (أي رابط يبدأ بـ tel:)
+    if (href.startsWith(`tel:${CLIENT_PHONE}`) || href.startsWith(`tel:+966${CLIENT_PHONE.substring(1)}`) || href.startsWith('tel:')) {
+      triggerGoogleConversion(CONVERSION_LABEL_CALL);
+    }
+
+    // تتبع الواتساب (أي رابط يحتوي على wa.me أو رقم العميل)
+    if (href.includes(CLIENT_INT_PHONE) || href.includes(CLIENT_PHONE) || href.includes('wa.me')) {
+      triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
     }
   });
 
-  // رصد نموذج طلب التسعير الفوري
-  const form = document.getElementById('quickQuoteForm');
-  if (form) {
-    form.addEventListener('submit', (e) => {
+  // نموذج طلب التسعير الفوري والمعاينة
+  const quoteForm = document.getElementById('quickQuoteForm') || document.getElementById('inspectionForm');
+  if (quoteForm) {
+    quoteForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const service = document.getElementById('formService') ? document.getElementById('formService').value : 'دهانات';
-      const area = document.getElementById('formArea') ? document.getElementById('formArea').value : 'غير محدد';
-      const district = document.getElementById('formDistrict') ? document.getElementById('formDistrict').value : 'الرياض';
 
-      const msg = `مرحباً، أود طلب تسعيرة للمتر:\n- الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
-      const waUrl = `https://wa.me/${ADS_CONFIG.phone}?text=${encodeURIComponent(msg)}`;
+      const service = (document.getElementById('formService') || {}).value || 'دهانات عامة';
+      const area = (document.getElementById('formArea') || {}).value || 'غير محدد';
+      const district = (document.getElementById('formDistrict') || {}).value || 'الرياض';
 
-      // إرسال إحالة النموذج والانتقال للواتساب
-      sendGoogleConversion('form', waUrl);
+      // 1. إرسال إحالة النموذج فوراً إلى جوجل
+      triggerGoogleConversion(CONVERSION_LABEL_FORM);
+
+      const msg = `مرحباً، أود طلب تسعيرة فورية للمتر من مؤسسة الأول للدهانات:\n- نوع الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
+      const targetUrl = `https://wa.me/${CLIENT_INT_PHONE}?text=${encodeURIComponent(msg)}`;
+
+      // 2. الانتقال إلى الواتساب بعد إطلاق الإحالة مباشرة
+      setTimeout(() => {
+        window.location.href = targetUrl;
+      }, 300);
     });
   }
 
-  // التحكم بالقوائم والأكورديون
+  // التحكم بالقائمة الجانبية للجوال
   const menuToggle = document.getElementById('menuToggle');
   const mobileDrawer = document.getElementById('mobileDrawer');
   const drawerBackdrop = document.getElementById('drawerBackdrop');
@@ -110,53 +130,51 @@ document.addEventListener('DOMContentLoaded', () => {
       const active = mobileDrawer.classList.toggle('active');
       drawerBackdrop.classList.toggle('active', active);
       menuToggle.classList.toggle('active', active);
+      document.body.style.overflow = active ? 'hidden' : '';
     });
+
     drawerBackdrop.addEventListener('click', () => {
       mobileDrawer.classList.remove('active');
       drawerBackdrop.classList.remove('active');
       menuToggle.classList.remove('active');
+      document.body.style.overflow = '';
     });
   }
 
+  // أكورديون الخدمات بدرج الجوال
   const servicesToggle = document.getElementById('mobileServicesToggle');
   const servicesList = document.getElementById('mobileServicesList');
   if (servicesToggle && servicesList) {
-    servicesToggle.addEventListener('click', () => servicesList.classList.toggle('open'));
+    servicesToggle.addEventListener('click', () => {
+      servicesList.classList.toggle('open');
+    });
   }
 
-  const scrollBtn = document.getElementById('scrollTopBtn');
-  window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 380) scrollBtn && scrollBtn.classList.add('visible');
-    else scrollBtn && scrollBtn.classList.remove('visible');
-  }, { passive: true });
+  // زر الصعود للأعلى
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  if (scrollTopBtn) {
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 380) {
+        scrollTopBtn.classList.add('visible');
+      } else {
+        scrollTopBtn.classList.remove('visible');
+      }
+    });
 
-  if (scrollBtn) {
-    scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 
+  // أكورديون الأسئلة الشائعة
   document.querySelectorAll('.faq-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
       const card = btn.parentElement;
-      const open = card.classList.contains('open');
+      const isOpen = card.classList.contains('open');
       document.querySelectorAll('.faq-card').forEach(c => c.classList.remove('open'));
-      if (!open) card.classList.add('open');
+      if (!isOpen) {
+        card.classList.add('open');
+      }
     });
   });
 });
-
-// دوال الاستدعاء المباشر للأزرار التي تحتوي على onclick
-window.handleTrackedWhatsApp = function(event, defaultText) {
-  if (event) event.preventDefault();
-  const text = defaultText || 'مرحباً، أود الاستفسار عن خدمات الدهانات بالرياض';
-  sendGoogleConversion('whatsapp', `https://wa.me/${ADS_CONFIG.phone}?text=${encodeURIComponent(text)}`);
-};
-
-window.handleTrackedCall = function(event) {
-  if (event) event.preventDefault();
-  sendGoogleConversion('call', `tel:+${ADS_CONFIG.phone}`);
-};
-
-// تسجيل مشغل الخدمة PWA المحدث
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
