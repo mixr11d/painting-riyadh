@@ -1,11 +1,10 @@
 /**
- * Zero-Bug Conversion Tracking & Mobile UX Engine
- * Fully Verified for Google Ads Tag Assistant & Real-time Conversions
+ * Universal Autonomous Tracking & Mobile Engine - All Pages
  * Client: الأول لتنفيذ الدهانات بالرياض (0534953831)
  */
 
 // =========================================================================
-// 1. الإعدادات المركزية لحملة إعلانات جوجل والعميل
+// 1. إعدادات الحملة الإعلانية المركزية
 // =========================================================================
 const CLIENT_PHONE = '0534953831';
 const CLIENT_INT_PHONE = '966534953831';
@@ -16,7 +15,7 @@ const CONVERSION_LABEL_WHATSAPP = '3iEbCMy-nfgcEPn18K1C';
 const CONVERSION_LABEL_FORM = 'T-M8CLi2pPgcEPn18K1C'; 
 
 // =========================================================================
-// 2. التهيئة القياسية العالمية لـ Google Tag في النطاق العام (Global Scope)
+// 2. التهيئة القياسية لـ Google Tag في كل صفحات الموقع
 // =========================================================================
 window.dataLayer = window.dataLayer || [];
 function gtag() { window.dataLayer.push(arguments); }
@@ -25,7 +24,7 @@ window.gtag = gtag;
 gtag('js', new Date());
 gtag('config', GOOGLE_ADS_ID);
 
-// حقن مكتبة Google Tag في الـ Head فوراً
+// حقن مكتبة Google Tag في أي صفحة تُفتح تلقائياً
 (function injectGoogleTag() {
   if (GOOGLE_ADS_ID && !document.getElementById('google-ads-tag')) {
     const scriptTag = document.createElement('script');
@@ -47,21 +46,21 @@ function triggerGoogleConversion(label, callbackUrl) {
       }
     }
 
-    // إرسال حدث الإحالة القياسي إلى قوقل
-    console.log('===> إرسال إحالة إلى قوقل برمز:', label);
+    // إرسال حدث التحويل
+    console.log('===> [Google Ads Conversion] تم إرسال الإحالة برمز:', label);
     window.gtag('event', 'conversion', {
       'send_to': `${GOOGLE_ADS_ID}/${label}`,
       'event_callback': fireCallback
     });
 
-    // مهلة احتياطية للأمان (Fallback)
-    setTimeout(fireCallback, 600);
+    // مهلة احتياطية للأمان
+    setTimeout(fireCallback, 500);
   } else if (callbackUrl) {
     window.location.href = callbackUrl;
   }
 }
 
-// دوال عامة مربوطة بأزرار الموقع مباشرة
+// دوال عامة للاستدعاء اليدوي إذا وُجدت
 window.handleTrackedCall = function(event) {
   triggerGoogleConversion(CONVERSION_LABEL_CALL);
 };
@@ -82,68 +81,74 @@ window.reportConversion = function(conversionType, targetUrl) {
 };
 
 // =========================================================================
-// 3. إدارة التفاعل، تتبع النقرات العام، والقوائم ونموذج التسعير
+// 3. راصد النقرات الشامل لجميع الصفحات (Universal Global Event Listener)
 // =========================================================================
+
+// رصد أزرار النماذج فور النقر في مرحلة الـ Capture لضمان التقاط الإحالة قبل أي شيء
+document.addEventListener('click', (e) => {
+  // رصد زر إرسال أي نموذج في أي صفحة
+  const submitBtn = e.target.closest('button[type="submit"], input[type="submit"], .btn-primary');
+  const parentForm = e.target.closest('form');
+  if (submitBtn && parentForm) {
+    triggerGoogleConversion(CONVERSION_LABEL_FORM);
+  }
+
+  // رصد روابط الاتصال والواتساب
+  const link = e.target.closest('a');
+  if (!link) return;
+
+  const href = link.getAttribute('href') || '';
+
+  // استبعاد رقم المطور
+  if (href.includes('0578539687') || href.includes('966578539687')) {
+    return;
+  }
+
+  // تتبع أي اتصال هاتفي في أي صفحة
+  if (href.startsWith('tel:') || href.includes(CLIENT_PHONE)) {
+    triggerGoogleConversion(CONVERSION_LABEL_CALL);
+  }
+
+  // تتبع أي رابط واتساب في أي صفحة
+  if (href.includes('wa.me') || href.includes(CLIENT_INT_PHONE)) {
+    triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
+  }
+}, true); // true تعني تفعيل مرحلة Capture لسبق أي حدث آخر
+
 document.addEventListener('DOMContentLoaded', () => {
 
-  // إذا وصل الزائر لصفحة الشكر يتم إرسال إحالة النموذج تلقائياً
+  // إذا وصل الزائر لصفحة الشكر في أي وقت يتم تسجيل إحالة النموذج
   if (window.location.pathname.includes('thank-you')) {
     triggerGoogleConversion(CONVERSION_LABEL_FORM);
   }
 
-  // تتبع النقر العام (اتصال / واتساب) مع استبعاد رقم المطور تلقائياً
-  document.addEventListener('click', (e) => {
-    // تتبع زر إرسال النموذج إذا تم الضغط عليه
-    const submitBtn = e.target.closest('button[type="submit"]');
-    if (submitBtn) {
-      triggerGoogleConversion(CONVERSION_LABEL_FORM);
-    }
-
-    const target = e.target.closest('a');
-    if (!target) return;
-
-    const href = target.getAttribute('href') || '';
-
-    // استبعاد رقم المطور
-    if (href.includes('0578539687') || href.includes('966578539687')) {
-      return;
-    }
-
-    // تتبع الاتصال الهاتفي
-    if (href.startsWith(`tel:${CLIENT_PHONE}`) || href.startsWith(`tel:+966${CLIENT_PHONE.substring(1)}`) || href.startsWith('tel:')) {
-      triggerGoogleConversion(CONVERSION_LABEL_CALL);
-    }
-
-    // تتبع الواتساب
-    if (href.includes(CLIENT_INT_PHONE) || href.includes(CLIENT_PHONE) || href.includes('wa.me')) {
-      triggerGoogleConversion(CONVERSION_LABEL_WHATSAPP);
-    }
-  });
-
-  // نموذج طلب التسعير الفوري والمعاينة
-  const quoteForm = document.getElementById('quickQuoteForm') || document.getElementById('inspectionForm');
-  if (quoteForm) {
-    quoteForm.addEventListener('submit', (e) => {
+  // رصد إرسال أي نموذج تسعير أو تواصل في أي صفحة بالموقع
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
-
-      const service = (document.getElementById('formService') || {}).value || 'دهانات عامة';
-      const area = (document.getElementById('formArea') || {}).value || 'غير محدد';
-      const district = (document.getElementById('formDistrict') || {}).value || 'الرياض';
 
       // إرسال إحالة النموذج فوراً
       triggerGoogleConversion(CONVERSION_LABEL_FORM);
 
-      const msg = `مرحباً، أود طلب تسعيرة فورية للمتر من مؤسسة الأول للدهانات:\n- نوع الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
+      const serviceInput = form.querySelector('#formService, select[name="service"]');
+      const areaInput = form.querySelector('#formArea, input[name="area"]');
+      const districtInput = form.querySelector('#formDistrict, input[name="district"]');
+
+      const service = serviceInput ? serviceInput.value : 'طلب خدمات دهانات';
+      const area = areaInput ? areaInput.value : 'غير محدد';
+      const district = districtInput ? districtInput.value : 'الرياض';
+
+      const msg = `مرحباً، أود طلب تسعيرة فورية للمتر من مؤسسة الأول للدهانات:\n- الخدمة: ${service}\n- المساحة: ${area} م\n- الحي: ${district}`;
       const targetUrl = `https://wa.me/${CLIENT_INT_PHONE}?text=${encodeURIComponent(msg)}`;
 
-      // فتح الواتساب دون إغلاق صفحة الاختبار
+      // فتح الواتساب دون إغلاق صفحة الفحص الحالية
       setTimeout(() => {
         window.open(targetUrl, '_blank') || (window.location.href = targetUrl);
-      }, 400);
+      }, 350);
     });
-  }
+  });
 
-  // التحكم بالقائمة الجانبية للجوال
+  // التحكم بالقوائم ودرج الجوال في جميع الصفحات
   const menuToggle = document.getElementById('menuToggle');
   const mobileDrawer = document.getElementById('mobileDrawer');
   const drawerBackdrop = document.getElementById('drawerBackdrop');
@@ -164,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // أكورديون الخدمات بدرج الجوال
+  // أكورديون الخدمات
   const servicesToggle = document.getElementById('mobileServicesToggle');
   const servicesList = document.getElementById('mobileServicesList');
   if (servicesToggle && servicesList) {
