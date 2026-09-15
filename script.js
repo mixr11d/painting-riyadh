@@ -4,11 +4,7 @@
  * Developer Number: 0578539687
  */
 
-// تهيئة مصفوفة dataLayer فورياً لمنع فقدان النقرات قبل تحميل السكربت
-window.dataLayer = window.dataLayer || [];
-function gtag(){ window.dataLayer.push(arguments); }
-
-// إعدادات التتبع
+// 1. إعدادات التتبع والحسابات
 const CONFIG = {
   adsId: 'AW-17812962041',
   labels: {
@@ -20,10 +16,21 @@ const CONFIG = {
   devPhones: ['0578539687', '966578539687']
 };
 
-// فحص واستثناء المطور برمجياً
+// 2. تهيئة مصفوفة dataLayer وتجهيز قوقل فورياً في الذاكرة
+window.dataLayer = window.dataLayer || [];
+function gtag(){ window.dataLayer.push(arguments); }
+gtag('js', new Date());
+gtag('config', CONFIG.adsId);
+
+// 3. فحص واستثناء المطور برمجياً مع إمكانية فك الحظر للاختبار
 function isDeveloperSession() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('dev_preview') === 'false' || urlParams.get('developer') === '0') {
+      localStorage.removeItem('block_ads_tracking');
+      console.info('[Tracking Enabled]: تم تفعيل التتبع بنجاح للاختبار.');
+      return false;
+    }
     if (urlParams.get('dev_preview') === 'true' || urlParams.get('developer') === '1') {
       localStorage.setItem('block_ads_tracking', 'true');
       return true;
@@ -34,16 +41,30 @@ function isDeveloperSession() {
   }
 }
 
-// دالة تسجيل التحويل مع صمام أمان زمني ضد AdBlockers
+// 4. تحميل كود قوقل بشكل غير حاجب للمعالج (Async & Non-blocking)
+let gtagLoaded = false;
+function loadGoogleTagScript() {
+  if (gtagLoaded) return;
+  gtagLoaded = true;
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.adsId}`;
+  document.head.appendChild(script);
+}
+
+// 5. دالة تسجيل الإحالة المحصنة ضد الضياع وموانع الإعلانات
 function reportConversion(conversionType, targetUrl) {
   const isDev = isDeveloperSession();
   
-  // تحويل مباشر للمطورين دون تسجيل إحالة
+  // استثناء جلسات المطورين من حرق الميزانية
   if (isDev) {
-    console.info('[Tracking Blocked]: جلسة تطوير أو معاينة. لن يتم احتساب الإحالة لمنع حرق الميزانية.');
+    console.info('[Tracking Blocked]: جلسة تطوير أو معاينة. لن يتم إرسال الإحالة لقوقل.');
     if (targetUrl) window.location.href = targetUrl;
     return;
   }
+
+  // فرض تحميل السكربت فوراً إذا لم يكن قد بدأ بعد
+  loadGoogleTagScript();
 
   let label = CONFIG.labels.whatsapp;
   if (conversionType === 'call') label = CONFIG.labels.call;
@@ -61,7 +82,7 @@ function reportConversion(conversionType, targetUrl) {
     }
   };
 
-  // صمام أمان مدته 600 ملي ثانية
+  // صمام أمان (Safety Timeout) 600ms لضمان عدم تعليق الزائر
   const safetyTimeout = setTimeout(executeCallback, 600);
 
   try {
@@ -79,29 +100,12 @@ function reportConversion(conversionType, targetUrl) {
   }
 }
 
-// تحميل كود gtag.js في وضع الخمول (requestIdleCallback) للأداء 100/100 في Core Web Vitals
-function loadGoogleAnalyticsDeferred() {
-  const loadScript = () => {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.adsId}`;
-    document.head.appendChild(script);
-
-    gtag('js', new Date());
-    gtag('config', CONFIG.adsId);
-  };
-
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(loadScript, { timeout: 2500 });
-  } else {
-    setTimeout(loadScript, 2000);
-  }
-}
-
-// إدارة القائمة بالجوال والأكورديون
+// 6. تشغيل الأحداث والتفاعل بعد تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-  loadGoogleAnalyticsDeferred();
+  // بدء تحميل سكربت قوقل في الخلفية دون أي تأخير مفرط
+  loadGoogleTagScript();
 
+  // قائمة الجوال
   const menuToggle = document.getElementById('menuToggle');
   const mobileDrawer = document.getElementById('mobileDrawer');
   const drawerBackdrop = document.getElementById('drawerBackdrop');
@@ -125,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawerBackdrop.addEventListener('click', closeMenu);
   }
 
-  // أكورديون الخدمات بدرج الجوال
+  // أكورديون الخدمات
   const accordionToggle = document.getElementById('mobileServicesToggle');
   const accordionContent = document.getElementById('mobileServicesList');
   if (accordionToggle && accordionContent) {
@@ -135,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // زر الصعود للأعلى
+  // زر الصعود لأعلى
   const scrollBtn = document.getElementById('scrollTopBtn');
   window.addEventListener('scroll', () => {
     if (window.pageYOffset > 380) {
@@ -157,10 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trigger.addEventListener('click', () => {
       const card = trigger.parentElement;
       const isOpen = card.classList.contains('open');
-      
-      // إغلاق باقي الأسئلة
       document.querySelectorAll('.faq-card').forEach(c => c.classList.remove('open'));
-
       if (!isOpen) {
         card.classList.add('open');
       }
@@ -172,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (quoteForm) {
     quoteForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      
       const service = document.getElementById('formService') ? document.getElementById('formService').value : 'دهانات عامة';
       const area = document.getElementById('formArea') ? document.getElementById('formArea').value : 'غير محدد';
       const district = document.getElementById('formDistrict') ? document.getElementById('formDistrict').value : 'الرياض';
@@ -182,13 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const encodedMsg = encodeURIComponent(messageText);
       const waUrl = `https://wa.me/${CONFIG.clientPhoneClean}?text=${encodedMsg}`;
 
-      // تسجيل إحالة النموذج والانتقال للواتساب
       reportConversion('form', waUrl);
     });
   }
 });
 
-// دوال تتبع مباشرة للاستدعاء من HTML
+// 7. الدوال العامة للاستدعاء المباشر من أزرار الموقع
 window.handleTrackedWhatsApp = function(event, defaultText) {
   if (event) event.preventDefault();
   const text = defaultText || 'مرحباً، أود الاستفسار عن خدمات الدهانات بالرياض وطلب معاينة مجانية';
@@ -202,7 +201,7 @@ window.handleTrackedCall = function(event) {
   reportConversion('call', url);
 };
 
-// تسجيل Service Worker للـ PWA والتصفح أوفلاين
+// 8. تسجيل Service Worker للـ PWA والتصفح أوفلاين
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => {
